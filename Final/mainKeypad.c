@@ -1,15 +1,15 @@
 /* USER CODE BEGIN Header */
 /**
-  **************************
+  **********
   * @file           : main.c
   * @brief          : Main program body
-  **************************
+  **********
   * This program creates two Tasks using the CMSIS_V1 API (FreeRTOS).
   * A sender Task puts a message in a Queue and the receiver Task gets the
   * message from the Queue.
   * The Tasks prints every one second using the UART protocol.
   *
-  **************************
+  **********
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
@@ -28,11 +28,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define BUTTON0 (GPIOA->IDR & GPIO_IDR_IDR0)
-#define BUTTON1 (GPIOA->IDR & GPIO_IDR_IDR1)
-#define BUTTON2 (GPIOA->IDR & GPIO_IDR_IDR2)
-#define BUTTON3 (GPIOA->IDR & GPIO_IDR_IDR3)
 /* USER CODE END PD */
+#define FILA4 (GPIOA->IDR & GPIO_IDR_IDR3)
+#define FILA3 (GPIOA->IDR & GPIO_IDR_IDR2)
+#define FILA1 (GPIOA->IDR & GPIO_IDR_IDR1)
+#define FILA2 (GPIOA->IDR & GPIO_IDR_IDR0)
+
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
@@ -123,6 +124,11 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* Create the task, storing the handle. */
+  osThreadDef(sTaskHandle, senderTask, osPriorityAboveNormal, 0, 128);
+  sTaskHandle = osThreadCreate(osThread(sTaskHandle), NULL);
+
+  osThreadDef(rTaskHandle, receiverTask, osPriorityNormal, 0, 128);
+  rTaskHandle = osThreadCreate(osThread(rTaskHandle), NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -195,8 +201,8 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void USER_RCC_Init(void){
-	RCC->APB2ENR	|=	 RCC_APB2ENR_USART1EN// 	USART 1 clock enable
-			| 	 RCC_APB2ENR_IOPAEN;//		I/O port A clock enable
+	RCC->APB2ENR	|=	 RCC_APB2ENR_USART1EN
+			| 	 RCC_APB2ENR_IOPAEN;
 }
 
 void USER_GPIO_Init(void){
@@ -216,8 +222,6 @@ void USER_GPIO_Init(void){
 	GPIOA->CRL &= ~GPIO_CRL_CNF3_0 & ~GPIO_CRL_MODE3;
 	GPIOA->CRL |= GPIO_CRL_CNF3_1;
 
-
-			//Output push-pull.
 	GPIOA->BSRR = GPIO_BSRR_BS4;
 	GPIOA->CRL &= ~GPIO_CRL_CNF4 & ~GPIO_CRL_MODE4_1;
 	GPIOA->CRL |= GPIO_CRL_MODE4_0;
@@ -226,18 +230,14 @@ void USER_GPIO_Init(void){
 	GPIOA->CRL &= ~GPIO_CRL_CNF5 & ~GPIO_CRL_MODE5_1;
 	GPIOA->CRL |= GPIO_CRL_MODE5_0;
 
-
 	GPIOA->BSRR = GPIO_BSRR_BS6;
 	GPIOA->CRL &= ~GPIO_CRL_CNF6 & ~GPIO_CRL_MODE6_1;
 	GPIOA->CRL |= GPIO_CRL_MODE6_0;
-
 
 	GPIOA->BSRR = GPIO_BSRR_BS7;
 	GPIOA->CRL &= ~GPIO_CRL_CNF7 & ~GPIO_CRL_MODE7_1;
 	GPIOA->CRL |= GPIO_CRL_MODE7_0;
 
-
-	//pin PA9 (USART1_TX) as alternate function output push-pull, max speed 10MHz
 	GPIOA->CRH	&=	~GPIO_CRH_CNF9_0 & ~GPIO_CRH_MODE9_1;
 	GPIOA->CRH	|=	 GPIO_CRH_CNF9_1 | GPIO_CRH_MODE9_0;
 
@@ -269,59 +269,169 @@ void senderTask(void const * argument)
   /* Infinite loop */
   int a;
 
-  for(;;)
-  {
+  for(;;){
 
-	  	  a = 0;
+	//FILA 1
+    a = 0;
+    GPIOA->ODR &= ~GPIO_ODR_ODR4; //ESTO ES 1
+    GPIOA->ODR |= GPIO_ODR_ODR5;
+    GPIOA->ODR |= GPIO_ODR_ODR6;
+    GPIOA->ODR |= GPIO_ODR_ODR7;
+    if (FILA1 == 0){
+        HAL_Delay(10);
+        a = 1;
+    }
 
+    GPIOA->ODR |= GPIO_ODR_ODR4; //ESTO ES 2
+    GPIOA->ODR &= ~GPIO_ODR_ODR5;
+    GPIOA->ODR |= GPIO_ODR_ODR6;
+    GPIOA->ODR |= GPIO_ODR_ODR7;
+     if (FILA1 == 0){
+        HAL_Delay(10);
+        a = 2;
+     }
 
-	  	  GPIOA->ODR |= GPIO_ODR_ODR4;
-	  	  GPIOA->ODR  &= ~GPIO_ODR_ODR5;
-	  	  GPIOA->ODR |= GPIO_ODR_ODR6;
-	  	  GPIOA->ODR |= GPIO_ODR_ODR7;
+     GPIOA->ODR |= GPIO_ODR_ODR4; //ESTO ES 3
+     GPIOA->ODR |= GPIO_ODR_ODR5;
+     GPIOA->ODR &= ~GPIO_ODR_ODR6;
+     GPIOA->ODR |= GPIO_ODR_ODR7;
+     if (FILA1 == 0){
+         HAL_Delay(10);
+         a = 3;
+     }
 
-	  	  if (BUTTON2 == 0){
-	  	  	HAL_Delay(10);
-	  	  	a = 4;//Down
-	  	  }
+     GPIOA->ODR |= GPIO_ODR_ODR4; //ESTO ES A
+     GPIOA->ODR |= GPIO_ODR_ODR5;
+     GPIOA->ODR |= GPIO_ODR_ODR6;
+     GPIOA->ODR &= ~GPIO_ODR_ODR7;
+      if (FILA1 == 0){
+         HAL_Delay(10);
+         a = 12;
+      }
+      //FINAL FILA 1
+      //FILA 2
+      GPIOA->ODR &= ~GPIO_ODR_ODR4; //ESTE ES 4
+      GPIOA->ODR |= GPIO_ODR_ODR5;
+      GPIOA->ODR |= GPIO_ODR_ODR6;
+      GPIOA->ODR |= GPIO_ODR_ODR7;
+      if (FILA2 == 0){
+    	  HAL_Delay(10);
+    	  a = 4;
+      }
 
+      GPIOA->ODR |= GPIO_ODR_ODR4; //ESTE ES 5
+      GPIOA->ODR &= ~GPIO_ODR_ODR5;
+      GPIOA->ODR |= GPIO_ODR_ODR6;
+      GPIOA->ODR |= GPIO_ODR_ODR7;
+      if (FILA2 == 0){
+    	  HAL_Delay(10);
+    	  a = 5;
+      }
 
-	  	  GPIOA->ODR |= ~GPIO_ODR_ODR4;
-	  	  GPIOA->ODR |= GPIO_ODR_ODR5;
-	  	  GPIOA->ODR &= ~GPIO_ODR_ODR6;
-	  	  GPIOA->ODR |= GPIO_ODR_ODR7;
+      GPIOA->ODR |= GPIO_ODR_ODR4; //ESTE ES 6
+      GPIOA->ODR |= GPIO_ODR_ODR5;
+      GPIOA->ODR &= ~GPIO_ODR_ODR6;
+      GPIOA->ODR |= GPIO_ODR_ODR7;
+      if (FILA2 == 0){
+    	  HAL_Delay(10);
+    	  a = 6;
+      }
 
+      GPIOA->ODR |= GPIO_ODR_ODR4; //ESTE ES B
+      GPIOA->ODR |= GPIO_ODR_ODR5;
+      GPIOA->ODR |= GPIO_ODR_ODR6;
+      GPIOA->ODR &= ~GPIO_ODR_ODR7;
+      if (FILA2 == 0){
+    	  HAL_Delay(10);
+    	  a = 13;
+      }
+      //FINAL FILA 2
+      //FILA 3
+      GPIOA->ODR &= ~GPIO_ODR_ODR4; //EST0 ES 7
+      GPIOA->ODR |= GPIO_ODR_ODR5;
+      GPIOA->ODR |= GPIO_ODR_ODR6;
+      GPIOA->ODR |= GPIO_ODR_ODR7;
 
-	  	  if (BUTTON1 == 0){
-	  	  	HAL_Delay(10);
-	  	  	a = 3;//"Right";
-	  	  }
-	  	  else if (BUTTON3 == 0){
-	  	  	HAL_Delay(10);
-	  	  a = 2;//"Left";
-	  	  }
+      if (FILA3 == 0){
+        HAL_Delay(10);
+        a = 7;
+      }
 
-	  	  GPIOA->ODR |= GPIO_ODR_ODR3;
-	  	  GPIOA->ODR |= GPIO_ODR_ODR4;
-	  	  GPIOA->ODR |= GPIO_ODR_ODR5;
-	  	  GPIOA->ODR |= GPIO_ODR_ODR6;
-	  	  GPIOA->ODR &= ~GPIO_ODR_ODR7;
+      GPIOA->ODR |= GPIO_ODR_ODR4; //EST0 ES 8
+      GPIOA->ODR  &= ~GPIO_ODR_ODR5;
+      GPIOA->ODR |= GPIO_ODR_ODR6;
+      GPIOA->ODR |= GPIO_ODR_ODR7;
 
-	  	  if (BUTTON2 == 0){
-	  	  	HAL_Delay(10);
-	  	  a = 1; //"Up";
-	  	  }
+      if (FILA3 == 0){
+		HAL_Delay(10);
+		a = 8;
+      }
 
-	  	  if(a!=0){
-	  	  s_event1 = osMessagePut(MsgQueueHandle, a, 1000);
-	  	  osDelay(500);
-		  r_event1 = osMessageGet(MsgQueueHandle, 2000);
-		  if(r_event1.status == osEventMessage ){
+      GPIOA->ODR |= GPIO_ODR_ODR4; //EST0 ES 9
+      GPIOA->ODR |= GPIO_ODR_ODR5;
+      GPIOA->ODR &= ~GPIO_ODR_ODR6;
+      GPIOA->ODR |= GPIO_ODR_ODR7;
 
-		  }
-		  else
-		  	myprintf("Failed to receive data from Queue\n");
-		}
+      if (FILA3 == 0){
+		HAL_Delay(10);
+		a = 9;
+      }
+
+      GPIOA->ODR |= GPIO_ODR_ODR4; //EST0 ES C
+      GPIOA->ODR |= GPIO_ODR_ODR5;
+      GPIOA->ODR |= GPIO_ODR_ODR6;
+      GPIOA->ODR &= ~GPIO_ODR_ODR7;
+      if (FILA3 == 0){
+		HAL_Delay(10);
+		a = 14;
+      }
+      //FINAL FILA 3
+      //FILA 4
+      GPIOA->ODR &= ~GPIO_ODR_ODR4; //ESTO ES *
+      GPIOA->ODR |= GPIO_ODR_ODR5;
+      GPIOA->ODR |= GPIO_ODR_ODR6;
+      GPIOA->ODR |= GPIO_ODR_ODR7;
+      if (FILA4 == 0){
+        HAL_Delay(10);
+        a = 11;
+      }
+
+      GPIOA->ODR |= GPIO_ODR_ODR4; //ESTO ES 0
+      GPIOA->ODR &= ~GPIO_ODR_ODR5;
+      GPIOA->ODR |= GPIO_ODR_ODR6;
+      GPIOA->ODR |= GPIO_ODR_ODR7;
+      if (FILA4 == 0){
+    	HAL_Delay(10);
+    	a = 16;
+      }
+      GPIOA->ODR |= GPIO_ODR_ODR4; //ESTO ES #
+      GPIOA->ODR |= GPIO_ODR_ODR5;
+      GPIOA->ODR &= ~GPIO_ODR_ODR6;
+      GPIOA->ODR |= GPIO_ODR_ODR7;
+      if (FILA4 == 0){
+    	HAL_Delay(10);
+    	a = 10;
+      }
+
+      GPIOA->ODR |= GPIO_ODR_ODR4; //ESTO ES D
+      GPIOA->ODR |= GPIO_ODR_ODR5;
+      GPIOA->ODR |= GPIO_ODR_ODR6;
+      GPIOA->ODR &= ~GPIO_ODR_ODR7;
+      if (FILA4 == 0){
+    	HAL_Delay(10);
+    	a = 15;
+      }
+      //FINAL FILA 3
+
+      if(a!=0){
+    	 s_event1 = osMessagePut(MsgQueueHandle, a, 1000);
+    	 osDelay(500);
+    	 r_event1 = osMessageGet(MsgQueueHandle, 2000);
+    	 if(r_event1.status == osEventMessage ){
+
+        }else
+            myprintf("Failed to receive data from Queue\n");
+	}
   }
 
 
@@ -339,14 +449,38 @@ osEvent r_event;
 for(;;){
 	  r_event = osMessageGet(MsgQueueHandle, 1000);
 	  if( r_event.status == osEventMessage ){
-		  if(r_event.value.v == 4)
-			  myprintf("Down");
+		  if(r_event.value.v == 16)
+			  myprintf("0");
+		  else if(r_event.value.v == 1)
+			  myprintf("1");
+		  else if(r_event.value.v == 2)
+			  myprintf("2");
 		  else if(r_event.value.v == 3)
-			  myprintf("Right");
-		 else if(r_event.value.v == 2)
-			  myprintf("Left");
-		 else if(r_event.value.v == 1)
-			   myprintf("Up");
+			  myprintf("3");
+		  else if(r_event.value.v == 4)
+			  myprintf("4");
+		  else if(r_event.value.v == 5)
+			  myprintf("5");
+		  else if(r_event.value.v == 6)
+			  myprintf("6");
+		  else if(r_event.value.v == 7)
+			  myprintf("7");
+		  else if(r_event.value.v == 8)
+			  myprintf("8");
+		  else if(r_event.value.v == 9)
+			  myprintf("9");
+		  else if(r_event.value.v == 10)
+			  myprintf("#");
+		  else if(r_event.value.v == 11)
+			  myprintf("*");
+		  else if(r_event.value.v == 12)
+			  myprintf("A");
+		  else if(r_event.value.v == 13)
+			  myprintf("B");
+		  else if(r_event.value.v == 14)
+			  myprintf("C");
+		  else if(r_event.value.v == 15)
+			  myprintf("D");
 	  s_event = osMessagePut(MsgQueueHandle, "1", 1000);
 	  }
 	  else
